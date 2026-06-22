@@ -21,7 +21,7 @@ import cors from 'cors';
 const corsOptions = {
     origin: [
         'https://blogs-full-stack.vercel.app',
-        'http://localhost:5173'
+        // 'http://localhost:5173'
     ],
     credentials: true,
 };
