@@ -15,7 +15,7 @@ const allowedOrigins = [
   "http://localhost:5173"
 ];
 
-// CORS MUST be before everything else
+// Manual CORS handler - keep this BEFORE all middlewares and routes
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -42,6 +42,13 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("<h1>Home Page</h1>");
+});
+
+app.get("/cors-test", (req, res) => {
+  res.json({
+    success: true,
+    origin: req.headers.origin || null
+  });
 });
 
 app.use("/api/v1/auth", AuthRoutes);
