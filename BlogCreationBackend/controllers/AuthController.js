@@ -75,7 +75,7 @@ export const Login = async (req, res) => {
         const cookieOptions = {
             httpOnly: true,
             secure: true,
-            sameSite: true ? 'None' : 'Lax',
+            sameSite: 'None',
             // secure: false,
             // sameSite: 'Lax',
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // Correct cookie expiration
