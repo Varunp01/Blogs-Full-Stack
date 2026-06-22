@@ -74,10 +74,10 @@ export const Login = async (req, res) => {
         const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, { expiresIn: "1d" });
         const cookieOptions = {
             httpOnly: true,
-            // secure: true,
-            // sameSite: true ? 'None' : 'Lax',
-            secure: false,
-            sameSite: 'Lax',
+            secure: true,
+            sameSite: true ? 'None' : 'Lax',
+            // secure: false,
+            // sameSite: 'Lax',
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // Correct cookie expiration
         };
         return res.status(201).cookie("token", token, cookieOptions).json({
