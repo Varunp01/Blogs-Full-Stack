@@ -56,10 +56,12 @@ const blogSchema = new mongoose.Schema(
       default: "draft",
     },
 
-    likes: {
-      type: Number,
-      default: 0,
+    likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
+  ],
 
     publishedAt: {
       type: Date,
