@@ -413,7 +413,7 @@ export const DeleteBlog = async (req, res) => {
 export const toggleLikeBlog = async (req, res) => {
   try {
     const { blogId } = req.params;
-    const userId = req.user?._id;
+        const userId = req.user;
 
     if (!userId) {
       return res.status(401).json({
