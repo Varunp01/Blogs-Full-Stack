@@ -45,7 +45,7 @@ const BlogCard = ({ blog, manage = false, onDelete }) => {
           <span className="shrink-0">{formatDate(blog.publishedAt || blog.createdAt)}</span>
         </div>
 
-        <div className="mt-3 text-sm text-gray-500">Likes: {blog.likes || 0}</div>
+        <div className="mt-3 text-sm text-gray-500">Likes: {blog.likes?.length || 0}</div>
 
         {manage ? (
           <div className="mt-5 flex items-center gap-4">
