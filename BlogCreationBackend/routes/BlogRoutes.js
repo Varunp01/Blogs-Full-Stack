@@ -21,7 +21,7 @@ router.get("/edit/:id", isAuthenticated, GetBlogByIdForEdit);
 
 router.put("/update/:id", isAuthenticated, UpdateBlog);
 router.delete("/delete/:id", isAuthenticated, DeleteBlog);
-router.patch("/togglelike/:id", isAuthenticated, toggleLikeBlog);
+router.patch("/togglelike/:blogId", isAuthenticated, toggleLikeBlog);
 
 router.get("/:slug", GetBlogBySlug);
 
