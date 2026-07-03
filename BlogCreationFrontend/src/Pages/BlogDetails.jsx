@@ -5,6 +5,7 @@ import { formatDate } from "../Utils/date";
 import axios from "axios";
 import api from "../api/axios";
 import { useSelector } from "react-redux";
+import CommentSection from "./Components/CommentsSection";
 
 const BlogDetails = () => {
   const { slug } = useParams();
@@ -17,7 +18,7 @@ const BlogDetails = () => {
   // Get logged-in user from localStorage
   // Change this according to how you store your user
   const loggedInUser = useSelector((state) => state.user.user);
-const userId = loggedInUser?._id;
+  const userId = loggedInUser?._id;
 
   useEffect(() => {
     if (blog) {
@@ -31,31 +32,31 @@ const userId = loggedInUser?._id;
     }
   }, [blog, userId]);
 
-const handleLikeToggle = async () => {
-  try {
-    if (!userId) {
-      alert("Please login to like this blog.");
-      return;
-    }
+  const handleLikeToggle = async () => {
+    try {
+      if (!userId) {
+        alert("Please login to like this blog.");
+        return;
+      }
 
-    setLikeLoading(true);
+      setLikeLoading(true);
 
-    const { data } = await api.patch(
-      `/blog/togglelike/${blog._id}`);
+      const { data } = await api.patch(
+        `/blog/togglelike/${blog._id}`);
 
-    setLiked(data.liked);
-    setLikesCount(data.likesCount);
-  } catch (error) {
-    console.error("Like error:", error);
+      setLiked(data.liked);
+      setLikesCount(data.likesCount);
+    } catch (error) {
+      console.error("Like error:", error);
 
-    alert(
-      error.response?.data?.message ||
+      alert(
+        error.response?.data?.message ||
         "Something went wrong while liking the blog."
-    );
-  } finally {
-    setLikeLoading(false);
-  }
-};
+      );
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -161,11 +162,10 @@ const handleLikeToggle = async () => {
           <button
             onClick={handleLikeToggle}
             disabled={likeLoading}
-            className={`px-5 py-2 rounded-full font-semibold transition ${
-              liked
-                ? "bg-red-100 text-red-600 hover:bg-red-200"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            } disabled:opacity-60`}
+            className={`px-5 py-2 rounded-full font-semibold transition ${liked
+              ? "bg-red-100 text-red-600 hover:bg-red-200"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              } disabled:opacity-60`}
           >
             {likeLoading ? "Please wait..." : liked ? "❤️ Liked" : "🤍 Like"}
           </button>
@@ -174,6 +174,10 @@ const handleLikeToggle = async () => {
             Likes:{" "}
             <span className="font-semibold text-gray-900">{likesCount}</span>
           </p>
+        </div>
+
+        <div className="mt-2 border-t border-gray-500 pt-2 gap-4">
+          <CommentSection id={`${blog._id}`}></CommentSection>
         </div>
       </article>
     </main>
