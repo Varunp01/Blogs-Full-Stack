@@ -411,61 +411,61 @@ export const DeleteBlog = async (req, res) => {
 };
 
 export const toggleLikeBlog = async (req, res) => {
-  try {
-    const { blogId } = req.params;
+    try {
+        const { blogId } = req.params;
         const userId = req.user;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please login first.",
-      });
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized. Please login first.",
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(blogId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid blog id.",
+            });
+        }
+
+        const blog = await Blog.findById(blogId);
+
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found.",
+            });
+        }
+
+        const alreadyLiked = blog.likes.some(
+            (id) => id.toString() === userId.toString()
+        );
+
+        if (alreadyLiked) {
+            // dislike / unlike
+            blog.likes = blog.likes.filter(
+                (id) => id.toString() !== userId.toString()
+            );
+        } else {
+            // like
+            blog.likes.push(userId);
+        }
+
+        await blog.save();
+
+        return res.status(200).json({
+            success: true,
+            message: alreadyLiked ? "Blog unliked successfully." : "Blog liked successfully.",
+            liked: !alreadyLiked,
+            likesCount: blog.likes.length,
+        });
+    } catch (error) {
+        console.error("Toggle like blog error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while liking the blog.",
+        });
     }
-
-    if (!mongoose.Types.ObjectId.isValid(blogId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid blog id.",
-      });
-    }
-
-    const blog = await Blog.findById(blogId);
-
-    if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found.",
-      });
-    }
-
-    const alreadyLiked = blog.likes.some(
-      (id) => id.toString() === userId.toString()
-    );
-
-    if (alreadyLiked) {
-      // dislike / unlike
-      blog.likes = blog.likes.filter(
-        (id) => id.toString() !== userId.toString()
-      );
-    } else {
-      // like
-      blog.likes.push(userId);
-    }
-
-    await blog.save();
-
-    return res.status(200).json({
-      success: true,
-      message: alreadyLiked ? "Blog unliked successfully." : "Blog liked successfully.",
-      liked: !alreadyLiked,
-      likesCount: blog.likes.length,
-    });
-  } catch (error) {
-    console.error("Toggle like blog error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong while liking the blog.",
-    });
-  }
 };

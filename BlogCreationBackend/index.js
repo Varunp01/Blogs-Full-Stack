@@ -40,3 +40,6 @@ app.use("/api/v1/auth",AuthRoutes);
 
 import BlogRoutes from "./routes/BlogRoutes.js";
 app.use("/api/v1/blog",BlogRoutes);
+
+import CommentRoutes from "./routes/CommentRoutes.js";
+app.use("/api/v1/comment",CommentRoutes);
