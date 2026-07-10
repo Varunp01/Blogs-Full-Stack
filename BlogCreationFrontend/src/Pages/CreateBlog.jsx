@@ -35,6 +35,7 @@ const CreateBlog = () => {
     try {
       setSubmitting(true);
       const payload = formToBlogPayload(formData, status);
+      console.log(payload);
       const res = await api.post("/blog/create", payload);
 
       if (res.data.success) {
