@@ -7,6 +7,7 @@ import {
   GetBlogBySlug,
   GetMyBlogs,
   GetPublishedBlogs,
+  signImage,
   toggleLikeBlog,
   UpdateBlog,
 } from "../controllers/BlogController.js";
@@ -22,6 +23,7 @@ router.get("/edit/:id", isAuthenticated, GetBlogByIdForEdit);
 router.put("/update/:id", isAuthenticated, UpdateBlog);
 router.delete("/delete/:id", isAuthenticated, DeleteBlog);
 router.patch("/togglelike/:blogId", isAuthenticated, toggleLikeBlog);
+router.patch("/sign-upload", isAuthenticated, signImage);
 
 router.get("/:slug", GetBlogBySlug);
 

@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 import slugify from "slugify";
 import { User } from "../models/user.js";
 import { Blog } from "../models/blog.js";
+import { v2 as cloudinary } from 'cloudinary';
+
+import dotenv from 'dotenv';
+dotenv.config({
+    path: "../controllers/.env"
+})
 
 export const CreateB = async (req, res) => {
     try {
@@ -469,3 +475,32 @@ export const toggleLikeBlog = async (req, res) => {
         });
     }
 };
+
+export const signImage = (req,res)=>{
+try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'Blogify'; // Destination folder in Cloudinary
+
+    // Parameters MUST match what the frontend sends to Cloudinary
+    const paramsToSign = {
+      timestamp: timestamp,
+      folder: folder,
+    };
+
+    // Generate SHA-1 signature using api_secret internally
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    res.json({
+      signature,
+      timestamp,
+      folder,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate signature', error: error.message });
+  }
+}
