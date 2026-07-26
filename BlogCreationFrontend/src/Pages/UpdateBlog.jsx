@@ -1,32 +1,55 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { BLOG_API_END_POINT } from "../Constants";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { BLOG_API_END_POINT } from "../Constants";
+import { useGetBlogBySlug } from "../hooks/useGetBlogBySlug";
 
-const CATEGORIES = [ "Web Development", "Technology", "SEO", "Design", "Marketing", "Writing", "Productivity", "General"];
+const UpdateBlog = () => {
+  // Route params
+  const { blogId, blogSlug } = useParams();
+  const navigate = useNavigate();
 
-const CreateBlog = () => {
   // State variables
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [imgUrl, setImgUrl] = useState("");
   const [imgError, setImgError] = useState(false);
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState("");
   const [status, setStatus] = useState("draft");
   const [tags, setTags] = useState("");
-  
-  const { user } = useSelector((state) => state.user);
-  const navigate = useNavigate();
 
+  const { user } = useSelector((state) => state.user);
+
+  // Authentication check
   useEffect(() => {
     if (!user) {
-      toast.error("Login to Create Blog");
+      toast.error("Login to edit Blog");
       navigate("/auth");
     }
   }, [user, navigate]);
+
+  // Fetch blog data
+  const { blog, loading, error } = useGetBlogBySlug(blogSlug);
+
+  // Populate state variables when fetched blog data changes
+  useEffect(() => {
+    if (blog) {
+      setTitle(blog.title || "");
+      setExcerpt(blog.excerpt || "");
+      setImgUrl(blog.featuredImage || blog.imgUrl || "");
+      setContent(blog.content || "");
+      setCategory(blog.category || "");
+      setStatus(blog.status || "draft");
+      setTags(Array.isArray(blog.tags) ? blog.tags.join(", ") : blog.tags || "");
+    }
+  }, [blog]);
+
+  const resetAndMove = () => {
+    navigate(-1); // Navigate back to the previous page
+  };
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
@@ -39,20 +62,16 @@ const CreateBlog = () => {
     const toastId = toast.loading("Uploading image...");
 
     try {
-      const sigResponse = await axios.get(
-        `${BLOG_API_END_POINT}/blog/sign-upload`,
-        {
-          withCredentials: true,
-        }
-      );
+      const sigResponse = await axios.get(`${BLOG_API_END_POINT}/blog/sign-upload`, {
+        withCredentials: true,
+      });
 
       if (sigResponse.status !== 200) {
         toast.error("Failed to get upload signature", { id: toastId });
         return;
       }
 
-      const { signature, timestamp, folder, apiKey, cloudName } =
-        sigResponse.data;
+      const { signature, timestamp, folder, apiKey, cloudName } = sigResponse.data;
 
       const formData = new FormData();
       formData.append("file", selectedFile);
@@ -74,47 +93,27 @@ const CreateBlog = () => {
         setImgError(false);
         toast.success("Image uploaded successfully!", { id: toastId });
       } else {
-        toast.error(data.error?.message || "Cloudinary upload failed", {
-          id: toastId,
-        });
+        toast.error(data.error?.message || "Cloudinary upload failed", { id: toastId });
       }
-    } catch (error) {
-      console.error("Upload Error:", error);
+    } catch (err) {
+      console.error("Upload Error:", err);
       toast.error("Upload failed. Please try again.", { id: toastId });
     }
-  };
-
-  const resetAndMove = (e) => {
-    e.preventDefault();
-    setTitle("");
-    setExcerpt("");
-    setImgUrl("");
-    setImgError(false);
-    setContent("");
-    setCategory(CATEGORIES[0]);
-    setStatus("draft");
-    setTags("");
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    // Convert comma-separated string into an array of strings
     const parsedTags = tags
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
 
-    const submitToastId = toast.loading("Submitting...");
+    const submitToastId = toast.loading("Updating blog...");
 
     try {
-      const res = await axios.post(
-        `${BLOG_API_END_POINT}/blog/create`,
+      const res = await axios.put(
+        `${BLOG_API_END_POINT}/blog/update/${blogId}`,
         {
           title,
           excerpt,
@@ -133,41 +132,53 @@ const CreateBlog = () => {
       );
 
       if (res.data.success) {
-        toast.success(res.data.message || "Blog created successfully!", {
-          id: submitToastId,
-        });
+        toast.success(res.data.message || "Blog updated successfully!", { id: submitToastId });
         navigate("/");
       }
-    } catch (error) {
+    } catch (err) {
       toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Something went wrong",
+        err.response?.data?.message || err.message || "Something went wrong",
         { id: submitToastId }
       );
-      console.error(error);
+      console.error(err);
     }
   };
 
   const inputStyles =
     "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm font-medium text-slate-600">Loading blog details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm font-medium text-red-500">Failed to load blog details.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-10 pt-40 sm:px-6 lg:px-8">
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-            Blog editor
+            Blog updator
           </p>
           <h2 className="mt-2 text-3xl font-bold text-slate-900">
-            Create a new post
+            Update Your Post
           </h2>
           <p className="mt-3 text-sm text-slate-600">
-            Add your blog details and prepare your article for publishing.
+            Edit your blog details and prepare your article for publishing.
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
+        <form onSubmit={submitHandler} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
           <div className="space-y-8 p-5 sm:p-8">
             {/* Post Information */}
             <div>
@@ -180,10 +191,7 @@ const CreateBlog = () => {
 
               <div className="mt-6 space-y-6">
                 <div>
-                  <label
-                    htmlFor="title"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
+                  <label htmlFor="title" className="mb-2 block text-sm font-semibold text-slate-700">
                     Post title
                   </label>
                   <input
@@ -197,10 +205,7 @@ const CreateBlog = () => {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="excerpt"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
+                  <label htmlFor="excerpt" className="mb-2 block text-sm font-semibold text-slate-700">
                     Excerpt
                   </label>
                   <textarea
@@ -232,14 +237,14 @@ const CreateBlog = () => {
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Upload from Device
                     </label>
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 transition hover:border-blue-400 hover:bg-blue-50/30">
-                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 transition hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-2">
                         📁
                       </div>
                       <span className="text-xs font-semibold text-slate-700">
                         Click to choose a file
                       </span>
-                      <span className="mt-1 text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-400 mt-1">
                         PNG, JPG, WEBP up to 10MB
                       </span>
                       <input
@@ -253,17 +258,12 @@ const CreateBlog = () => {
 
                   <div className="flex items-center gap-3">
                     <div className="h-px flex-1 bg-slate-200" />
-                    <span className="text-xs font-medium uppercase text-slate-400">
-                      OR
-                    </span>
+                    <span className="text-xs font-medium uppercase text-slate-400">OR</span>
                     <div className="h-px flex-1 bg-slate-200" />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="featuredImage"
-                      className="mb-2 block text-sm font-semibold text-slate-700"
-                    >
+                    <label htmlFor="featuredImage" className="mb-2 block text-sm font-semibold text-slate-700">
                       Image URL
                     </label>
                     <input
@@ -299,15 +299,13 @@ const CreateBlog = () => {
                         className="h-full w-full object-contain"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center p-4 text-center">
+                      <div className="flex h-full items-center justify-center text-center p-4">
                         <div>
                           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-lg">
                             🖼️
                           </div>
                           <p className="text-xs font-medium text-slate-600">
-                            {imgError
-                              ? "Failed to load image"
-                              : "No image selected"}
+                            {imgError ? "Failed to load image" : "No image selected"}
                           </p>
                         </div>
                       </div>
@@ -329,10 +327,7 @@ const CreateBlog = () => {
               </p>
 
               <div className="mt-6">
-                <label
-                  htmlFor="content"
-                  className="mb-2 block text-sm font-semibold text-slate-700"
-                >
+                <label htmlFor="content" className="mb-2 block text-sm font-semibold text-slate-700">
                   Content
                 </label>
                 <textarea
@@ -358,29 +353,20 @@ const CreateBlog = () => {
               </p>
 
               <div className="mt-6 grid gap-6 md:grid-cols-2">
-                {/* Category Dropdown Selection */}
                 <div>
-                  <label
-                    htmlFor="category"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
+                  <label htmlFor="category" className="mb-2 block text-sm font-semibold text-slate-700">
                     Category
                   </label>
-                  <select
+                  <input
                     id="category"
+                    type="text"
+                    onChange={(event) => setCategory(event.target.value)}
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="For example, Technology"
                     className={inputStyles}
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
-                {/* Status Radio Buttons */}
                 <div>
                   <p className="mb-2 block text-sm font-semibold text-slate-700">
                     Status
@@ -438,12 +424,8 @@ const CreateBlog = () => {
                   </div>
                 </div>
 
-                {/* Tags Input */}
                 <div className="md:col-span-2">
-                  <label
-                    htmlFor="tags"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
+                  <label htmlFor="tags" className="mb-2 block text-sm font-semibold text-slate-700">
                     Tags
                   </label>
                   <input
@@ -462,10 +444,10 @@ const CreateBlog = () => {
             </div>
           </div>
 
-          {/* Footer Actions */}
+          {/* Footer */}
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <p className="text-center text-xs text-slate-500 sm:text-left">
-              Complete the details before publishing your post.
+              Complete the details before saving your post.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -478,18 +460,17 @@ const CreateBlog = () => {
               </button>
 
               <button
-                type="button"
-                onClick={submitHandler}
+                type="submit"
                 className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
               >
-                Create post
+                Update Post
               </button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default CreateBlog;
+export default UpdateBlog;

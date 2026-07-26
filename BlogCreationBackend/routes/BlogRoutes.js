@@ -23,7 +23,7 @@ router.get("/edit/:id", isAuthenticated, GetBlogByIdForEdit);
 router.put("/update/:id", isAuthenticated, UpdateBlog);
 router.delete("/delete/:id", isAuthenticated, DeleteBlog);
 router.patch("/togglelike/:blogId", isAuthenticated, toggleLikeBlog);
-router.patch("/sign-upload", isAuthenticated, signImage);
+router.get("/sign-upload", signImage);
 
 router.get("/:slug", GetBlogBySlug);
 

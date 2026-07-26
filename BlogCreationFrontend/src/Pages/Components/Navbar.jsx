@@ -1,129 +1,117 @@
+import { CiMenuBurger } from "react-icons/ci";
 import React, { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import store from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { AUTH_API_END_POINT } from "../../Constants";
 import toast from "react-hot-toast";
-import api from "../../api/axios";
-import { setUser } from "../../redux/userSlice";
+import { clearUser, getUser } from "../../redux/userSlice";
+import { IoIosCloseCircleOutline } from "react-icons/io";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useSelector((store) => store.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const isLoggedIn = Boolean(user);
-
-  const publicLinks = [
-    { name: "Home", path: "/" },
-    { name: "Blogs", path: "/exploreblogs" },
-  ];
-
-  const protectedLinks = [
-    { name: "Create Blog", path: "/create" },
-    { name: "Profile", path: "/profile" },
-  ];
-
-  const navLinks = isLoggedIn ? [...publicLinks, ...protectedLinks] : publicLinks;
-
-  const linkClass = ({ isActive }) =>
-    isActive
-      ? "text-blue-600 font-semibold"
-      : "text-gray-600 hover:text-blue-600 transition-colors font-medium";
-
-  const handleLogout = async () => {
+  const logoutFunction = async () => {
     try {
-      const res = await api.post("/auth/logout");
-
-      dispatch(setUser(null));
-      toast.success(res.data.message || "Logged out successfully");
-      setIsMenuOpen(false);
-      navigate("/auth");
+      const res = await axios.post(`${AUTH_API_END_POINT}/logout`, {}, {
+        headers: {
+          'Content-Type': "application/json"
+        },
+        withCredentials: true
+      });
+      if (res.data.success) {
+        toast.success(res.data.message);
+        dispatch(clearUser());
+        navigate("/auth");
+      }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong during logout");
+      toast.error(error.response?.data?.message || error.message || "Something went wrong");
+      console.log(error);
     }
-  };
-
+  }
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="relative flex items-center justify-between h-16">
-          <Link to="/" className="text-2xl font-bold text-gray-900">
+    <>
+      <div className="fixed top-0 left-0 z-50 px-3 py-4 flex justify-center items-center w-screen">
+        <div className="bg-blue-100 w-[90%] px-3 py-4 rounded-2xl shadow-2xl flex justify-between items-center">
+          <Link to="/" className="text-2xl font-bold text-gray-900 px-2">
             Blogify
           </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <NavLink key={link.name} to={link.path} className={linkClass}>
-                {link.name}
-              </NavLink>
-            ))}
+          <div className="links hidden md:flex">
+            <Link to="/" className="text-lg font-semibold text-gray-700 px-4 py-3 rounded-2xl hover:bg-white">
+              Home
+            </Link>
+            <Link to="/blogs" className="text-lg font-semibold text-gray-700 px-4 py-3 rounded-2xl hover:bg-white">
+              Blogs
+            </Link>
+            {user &&
+              <>
+                <Link to="/create-blog" className="text-lg font-semibold text-gray-700 px-4 py-3 rounded-2xl hover:bg-white">
+                  Create Blog
+                </Link>
+                <Link to="/profile" className="text-lg font-semibold text-gray-700 px-4 py-3 rounded-2xl hover:bg-white">
+                  Profile
+                </Link>
+              </>
+            }
           </div>
-
-          <div className="hidden md:flex items-center gap-3">
-            {isLoggedIn ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                to="/auth"
-                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
-              >
+          <div className="login hidden md:flex">
+            {user ?
+              <div onClick={logoutFunction} className="cursor-pointer text-xl font-semibold text-gray-200 hover:text-gray-700 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-300">
+                LogOut
+              </div>
+              :
+              <Link to="/auth" className="text-xl font-semibold text-gray-200 hover:text-gray-700 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-300">
                 Login
               </Link>
-            )}
+            }
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((value) => !value)}
-            className="md:hidden text-gray-700 hover:text-blue-600 transition"
-            aria-label="Toggle menu"
-          >
-            <span className="text-3xl leading-none">{isMenuOpen ? "×" : "☰"}</span>
-          </button>
-
-          {isMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 w-full bg-white border-b shadow-md p-4 space-y-3">
-              {navLinks.map((link) => (
-                <NavLink
-                  key={link.name}
-                  to={link.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={linkClass}
-                >
-                  <span className="block">{link.name}</span>
-                </NavLink>
-              ))}
-
-              <div className="pt-3 border-t border-gray-100">
-                {isLoggedIn ? (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <Link
-                    to="/auth"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="inline-block px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
-                  >
-                    Login
-                  </Link>
-                )}
-              </div>
+          <div className="burgerMenu md:hidden" onClick={() => { setMobileOpen(!mobileOpen) }}>
+            <div className="text-xl font-semibold text-gray-200 hover:text-gray-700 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-300">
+              {mobileOpen ? <><IoIosCloseCircleOutline /></> : <><CiMenuBurger /></>}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </nav>
+      {mobileOpen &&
+        <div className=" fixed w-screen top-23 z-100 px-3 py-1 flex justify-center items-center">
+          <div className="bg-blue-100 w-[90%] px-3 py-4 rounded-2xl shadow-2xl">
+            <div className="links">
+              <Link to="/" className=" my-1 block text-lg font-semibold text-gray-700 px-4 py-1 rounded-2xl hover:bg-white">
+                Home
+              </Link>
+              <Link to="/blogs" className=" my-1 block text-lg font-semibold text-gray-700 px-4 py-1 rounded-2xl hover:bg-white">
+                Blogs
+              </Link>
+              {user &&
+                <>
+                  <Link to="/create-blog" className=" my-1 block text-lg font-semibold text-gray-700 px-4 py-1 rounded-2xl hover:bg-white">
+                    Create Blog
+                  </Link>
+                  <Link to="/profile" className=" my-1 block text-lg font-semibold text-gray-700 px-4 py-1 rounded-2xl hover:bg-white">
+                    Profile
+                  </Link>
+                </>
+              }
+            </div>
+            <div className="login">
+              {user ?
+                <div onClick={logoutFunction} className="cursor-pointer block text-xl font-semibold text-gray-200 hover:text-gray-700 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-300 text-center">
+                  LogOut
+                </div>
+                :
+                <Link to="/auth" className="block text-xl font-semibold text-gray-200 hover:text-gray-700 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-300 text-center">
+                  Login
+                </Link>
+
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </>
   );
 };
 

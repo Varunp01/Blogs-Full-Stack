@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import api from "../api/axios";
-import useMyBlogs from "../hooks/useMyBlogs";
-import BlogCard from "./Components/BlogCard";
-import BlogSkeleton from "./Components/BlogSkeleton";
+import { useMyBlogs } from "../hooks/useMyBlogs";
+import BlogCardSkeleton from "./HomeComponents/BlogCardSkeleton.jsx";
+import BlogCard from "./MyProfileComponents/BlogCard.jsx";
+import axios from "axios";
+import { BLOG_API_END_POINT } from "../Constants";
 
 const Profile = () => {
   const { user } = useSelector((store) => store.user);
@@ -13,9 +14,9 @@ const Profile = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const { blogs, pagination, loading, error, refetch } = useMyBlogs({
+  const { blogs = [], pagination, loading, error, refetch } = useMyBlogs({
     page,
-    limit: 9,
+    limit: 5,
     status,
     search,
   });
@@ -25,19 +26,23 @@ const Profile = () => {
     if (!confirmed) return;
 
     try {
-      const res = await api.delete(`/blog/delete/${blogId}`);
-      if (res.data.success) {
+      const res = await axios.delete(`${BLOG_API_END_POINT}/blog/delete/${blogId}`, {
+        withCredentials: true,
+      });
+
+      if (res.data?.success) {
         toast.success(res.data.message || "Blog deleted successfully");
-        refetch();
+        if (refetch) refetch();
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete blog");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete blog");
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-10 px-4">
+    <main className="min-h-screen bg-gray-50 py-10 pt-36 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Profile Header */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="flex items-center gap-6">
@@ -53,12 +58,16 @@ const Profile = () => {
               </div>
             </div>
 
-            <Link to="/create" className="px-5 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition text-center">
+            <Link
+              to="/create-blog"
+              className="px-5 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition text-center"
+            >
               Create New Blog
             </Link>
           </div>
         </section>
 
+        {/* Blog Controls Section */}
         <section className="mt-12">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
@@ -92,36 +101,45 @@ const Profile = () => {
             </div>
           </div>
 
-          {error && <div className="mt-8 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl">{error}</div>}
+          {error && (
+            <div className="mt-8 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl">
+              {error}
+            </div>
+          )}
 
+          {/* Blogs Grid */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              {Array.from({ length: 6 }).map((_, index) => <BlogSkeleton key={index} />)}
+              {Array.from({ length: 6 }).map((_, index) => (
+                <BlogCardSkeleton key={index} />
+              ))}
             </div>
           ) : blogs.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                {blogs.map((blog) => <BlogCard key={blog._id} blog={blog} manage onDelete={handleDelete} />)}
+                {blogs.map((blog) => (
+                  <BlogCard key={blog._id} blog={blog} manage onDelete={handleDelete} />
+                ))}
               </div>
 
               {pagination?.totalPages > 1 && (
-                <div className="mt-10 flex justify-center gap-3">
+                <div className="mt-10 flex justify-center items-center gap-3">
                   <button
                     type="button"
                     disabled={page === 1}
                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                    className="px-4 py-2 rounded-full border border-gray-300 bg-white disabled:opacity-50"
+                    className="px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
                   >
                     Previous
                   </button>
-                  <span className="px-4 py-2 text-gray-600">
-                    Page {pagination.currentPage} of {pagination.totalPages}
+                  <span className="px-4 py-2 text-gray-600 font-medium">
+                    Page {pagination.currentPage || page} of {pagination.totalPages}
                   </span>
                   <button
                     type="button"
                     disabled={page === pagination.totalPages}
                     onClick={() => setPage((prev) => Math.min(pagination.totalPages, prev + 1))}
-                    className="px-4 py-2 rounded-full border border-gray-300 bg-white disabled:opacity-50"
+                    className="px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
                   >
                     Next
                   </button>
@@ -133,7 +151,10 @@ const Profile = () => {
               <div className="text-5xl mb-4">📝</div>
               <h3 className="text-xl font-bold text-gray-900">No blogs found</h3>
               <p className="mt-2 text-gray-600">Start writing your first blog and share your ideas.</p>
-              <Link to="/create" className="inline-block mt-6 px-5 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition">
+              <Link
+                to="/create-blog"
+                className="inline-block mt-6 px-5 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
                 Create Blog
               </Link>
             </div>

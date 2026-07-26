@@ -1,42 +1,54 @@
+import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import api from "../api/axios";
+import toast from "react-hot-toast";
+import { BLOG_API_END_POINT } from "../Constants";
 
-const useMyBlogs = ({ page = 1, limit = 10, status = "", search = "" } = {}) => {
-  const [blogs, setBlogs] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export const useMyBlogs = ({
+    page,
+    limit,
+    status,
+    search,
+} = {}) => {
+    const [blogs, setBlogs] = useState([]);
+    const [pagination, setPagination] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-  const fetchMyBlogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const fetchMyBlogs = useCallback(async () => {
+        setLoading(true);
+        const toastId = toast.loading("Fetching Blogs...");
 
-      const res = await api.get("/blog/my-blogs", {
-        params: {
-          page,
-          limit,
-          status: status || undefined,
-          search: search || undefined,
-        },
-      });
+        try {
+            const res = await axios.get(`${BLOG_API_END_POINT}/blog/my-blogs`, {
+                params: {
+                    page,
+                    limit,
+                    status,
+                    search,
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                withCredentials: true,
+            });
 
-      setBlogs(res.data.blogs || []);
-      setPagination(res.data.pagination || null);
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to fetch your blogs");
-      setBlogs([]);
-      setPagination(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, limit, status, search]);
+            if (res.data?.success) {
+                setBlogs(res.data.blogs || []);
+                setPagination(res.data.pagination || null);
+                toast.success(res.data.message || "Blogs fetched successfully", { id: toastId });
+            } else {
+                toast.dismiss(toastId);
+            }
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || err.message || "Something went wrong";
+            toast.error(errorMessage, { id: toastId });
+        } finally {
+            setLoading(false);
+        }
+    }, [page, limit, status, search]);
 
-  useEffect(() => {
-    fetchMyBlogs();
-  }, [fetchMyBlogs]);
+    useEffect(() => {
+        fetchMyBlogs();
+    }, [fetchMyBlogs]);
 
-  return { blogs, pagination, loading, error, refetch: fetchMyBlogs };
+    return { blogs, pagination, loading, refetch: fetchMyBlogs };
 };
-
-export default useMyBlogs;
