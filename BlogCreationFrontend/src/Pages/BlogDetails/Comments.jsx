@@ -11,9 +11,7 @@ const CommentSection = ({ id }) => {
   const [submitting, setSubmitting] = useState(false);
 
   // Redux safe selector fallback
-  const user = useSelector(
-    (state) => state.auth?.user || state.user?.user || state.user
-  );
+  const {user} = useSelector( (state) => state.user );
 
   const {
     comments,

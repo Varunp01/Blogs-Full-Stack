@@ -150,7 +150,7 @@ const BlogDetails = () => {
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
           >
             Go Back
           </button>
@@ -194,7 +194,7 @@ const BlogDetails = () => {
       <div className="mb-8 flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors bg-gray-50 hover:bg-blue-50/50 px-4 py-2 rounded-lg border border-gray-100"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors bg-gray-50 hover:bg-blue-50/50 px-4 py-2 rounded-lg border border-gray-100 cursor-pointer"
         >
           <ArrowLeftIcon />
           <span>Go Back</span>

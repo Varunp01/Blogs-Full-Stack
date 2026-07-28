@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { useMyBlogs } from "../hooks/useMyBlogs";
@@ -20,6 +20,15 @@ const Profile = () => {
     status,
     search,
   });
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("Login to Create Blog");
+      navigate("/auth");
+    }
+  }, [user, navigate]);
 
   const handleDelete = async (blogId) => {
     const confirmed = window.confirm("Are you sure you want to delete this blog?");

@@ -9,15 +9,10 @@ const CreateComment = ({ blogId=22345, onCommentAdded=true }) => {
   const [loading, setLoading] = useState(false);
 
   // Safely grab user from Redux store
-  const { user } = useSelector((state) => state.auth || state.user || {});
+  const { user } = useSelector((state) => state.user);
 
   const submitComment = async (e) => {
-    e?.preventDefault();
-
-    if (!user) {
-      toast.error("Please log in to leave a comment");
-      return;
-    }
+    e.preventDefault();
 
     if (!blogId) {
       toast.error("Blog ID missing");
@@ -31,7 +26,10 @@ const CreateComment = ({ blogId=22345, onCommentAdded=true }) => {
 
     try {
       setLoading(true);
-
+    if (!user) {
+      toast.error("Please log in to leave a comment");
+      return;
+    }
       const res = await axios.post(
         `${BLOG_API_END_POINT}/comment/create`,
         {

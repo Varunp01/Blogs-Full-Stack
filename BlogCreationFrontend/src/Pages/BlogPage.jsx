@@ -203,7 +203,7 @@ const BlogPage = () => {
               <button
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
                   isActive
                     ? "bg-blue-600 text-white shadow-sm"
                     : "bg-white/70 text-gray-700 hover:bg-white border border-white/60"
@@ -268,7 +268,7 @@ const BlogPage = () => {
             <button
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               disabled={page === 1}
-              className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               Previous
             </button>
@@ -280,7 +280,7 @@ const BlogPage = () => {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all ${
+                    className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       page === pageNum
                         ? "bg-blue-600 text-white shadow-sm"
                         : "bg-white/70 text-gray-700 hover:bg-white"
@@ -295,7 +295,7 @@ const BlogPage = () => {
             <button
               onClick={() => setPage((prev) => prev + 1)}
               disabled={page >= totalPages}
-              className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               Next
             </button>
