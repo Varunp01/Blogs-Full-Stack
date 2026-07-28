@@ -5,7 +5,7 @@ const HomeHero = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <>
-    <section className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-4 py-24">
+    <section className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-4 py-30">
         <div className="mx-auto max-w-5xl text-center">
           <span className="mb-4 inline-block rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">
             Read. Write. Inspire.
